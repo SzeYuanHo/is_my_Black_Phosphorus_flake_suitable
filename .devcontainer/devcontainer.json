@@ -17,7 +17,7 @@
 
   // (Optional) If you want to keep your auto-run behavior when the editor attaches:
   "postAttachCommand": {
-    "server": "bash -lc '. .venv/bin/activate && streamlit run streamlit_app.py --server.enableCORS false --server.enableXsrfProtection false'"
+    "server": "bash -lc '. .venv/bin/activate && streamlit run streamlit_app.py'"
   },
 
   "portsAttributes": {
