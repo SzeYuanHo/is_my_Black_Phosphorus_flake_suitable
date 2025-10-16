@@ -1,6 +1,6 @@
-# 🎈 Blank app template
+# Is My Black Phosphorus Flake Suitable?
 
-A simple Streamlit app template for you to modify!
+Fine-tuned model for segmentation and classification of Black Phosphorus Flakes for Tunnelling Field-Effect Transistors (T-FETs) 
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
 
