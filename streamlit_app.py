@@ -76,28 +76,70 @@ if uploaded is not None:
             conf=conf,
             iou=iou,
             # imgsz=imgsz,
-            device="cpu",   # Codespaces typically has no CUDA
+            device="cpu",
             verbose=False,
             show=False,
         )
 
     res = results[0]
 
-    # Ultralytics .plot() returns BGR ndarray -> convert to RGB for PIL/Streamlit
     plotted_bgr = res.plot(boxes=True, labels=show_labels, conf=show_conf)
     plotted_rgb = Image.fromarray(plotted_bgr[:, :, ::-1])
 
     st.image(plotted_rgb, caption="Detections", use_container_width=True)
 
-    # Class counts
+    # Class counts with ordered output and confidence-sorted coordinates
     if res.boxes is not None and len(res.boxes) > 0:
         names = res.names if hasattr(res, "names") else getattr(model, "names", {})
-        classes = res.boxes.cls.cpu().numpy().astype(int).tolist()
-        unique, counts = np.unique(classes, return_counts=True)
+        boxes = res.boxes.xywh.cpu().numpy()          
+        classes = res.boxes.cls.cpu().numpy().astype(int) 
+        confs = res.boxes.conf.cpu().numpy() 
+
+        CLASS_ORDER = ["suitable", "further_review"]
+        
+        class_coords = {}
+        for cls, xywh, conf in zip(classes, boxes, confs):
+            label = names.get(cls, str(cls))
+            x, y = int(xywh[0]), int(xywh[1])
+            if label not in class_coords:
+                class_coords[label] = []
+            class_coords[label].append((x, y, conf))
+
+        # Sort coordinates within each class by confidence (descending)
+        for label in class_coords:
+            class_coords[label].sort(key=lambda item: item[2], reverse=True)
+            class_coords[label] = [(x, y) for x, y, _ in class_coords[label]]
+
+        if isinstance(img, np.ndarray):
+            height, width = img.shape[:2]
+        else:
+            width, height = img.size
+
         st.subheader("Detections Summary")
-        for c, n in zip(unique, counts):
-            label = names.get(c, str(c)) if isinstance(names, dict) else str(c)
-            st.write(f"- **{label}**: {int(n)}")
+        st.markdown(
+                    f'<p style="color:grey; font-style:italic; margin-top:0; margin-bottom:1rem;">'
+                    f'Image Dimensions: {width} × {height}. Coordinates from top-left corner.'
+                    f'</p>',
+                    unsafe_allow_html=True
+                    )
+        
+        def sort_key(label):
+            if label in CLASS_ORDER:
+                return (0, CLASS_ORDER.index(label))
+            else:
+                return (1, label)
+
+        sorted_labels = sorted(class_coords.keys(), key=sort_key)
+
+        for label in sorted_labels:
+            coords_list = class_coords[label]
+            count = len(coords_list)
+            coord_str = ", ".join([f"({x},{y})" for x, y in coords_list[:5]])
+            if len(coords_list) > 5:
+                coord_str += ", ..."
+            st.write(f"- **{label}**: {count} at {coord_str}")
+    else:
+        st.write("No objects detected.")
 
     st.download_button(
         label="⬇️ Download annotated image (PNG)",
