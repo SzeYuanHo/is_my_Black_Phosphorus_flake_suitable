@@ -8,7 +8,7 @@ from ultralytics import YOLO
 
 st.set_page_config(page_title="BP Flake Classifier", page_icon="🔬", layout="centered")
 st.title("BP Flake Classifier")
-st.caption("Upload an image; the app will draw bounding boxes and labels using your YOLO model.")
+st.caption("Upload an image; the app will draw bounding boxes and labels using YOLOv11.")
 
 # ---------- Weights resolution ----------
 # Default local path (commit your weights as models/best.pt) or set env var LOCAL_WEIGHTS
